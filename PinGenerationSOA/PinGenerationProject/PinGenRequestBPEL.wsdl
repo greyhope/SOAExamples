@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="PinGenRequestBPEL"
+             targetNamespace="http://xmlns.oracle.com/PinGenerationSOA/PinGenerationProject/PinGenRequestBPEL"
+             xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:client="http://xmlns.oracle.com/PinGenerationSOA/PinGenerationProject/PinGenRequestBPEL"
+             xmlns:ns1="http://www.example.org"
+             xmlns:plnk="http://schemas.xmlsoap.org/ws/2003/05/partner-link/">
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	TYPE DEFINITION - List of services participating in this BPEL process
+	The default output of the BPEL designer uses strings as input and 
+	output to the BPEL Process. But you can define or import any XML 
+	Schema type and use them as part of the message types.
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->   
+	<wsdl:types>
+		<schema xmlns="http://www.w3.org/2001/XMLSchema">
+			<import namespace="http://www.example.org" schemaLocation="xsd/pingenrequest.xsd" />
+		</schema>
+	</wsdl:types>
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	MESSAGE TYPE DEFINITION - Definition of the message types used as 
+	part of the port type defintions
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->      
+	<wsdl:message name="PinGenRequestBPELRequestMessage">
+		<wsdl:part name="payload" element="ns1:pingenrequest" />
+	</wsdl:message>
+
+	<wsdl:message name="PinGenRequestBPELResponseMessage">
+		<wsdl:part name="payload" element="ns1:pingenrequest" />
+	</wsdl:message>
+
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	PORT TYPE DEFINITION - A port type groups a set of operations into
+	a logical service unit.
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- portType implemented by the PinGenRequestBPEL BPEL process -->
+	<wsdl:portType name="PinGenRequestBPEL">
+		<wsdl:operation name="process">
+			<wsdl:input message="client:PinGenRequestBPELRequestMessage"/>
+		</wsdl:operation>
+	</wsdl:portType>
+
+	<!-- portType implemented by the requester of PinGenRequestBPEL BPEL process
+	for asynchronous callback purposes
+	-->
+	<wsdl:portType name="PinGenRequestBPELCallback">
+		<wsdl:operation name="processResponse">
+			<wsdl:input message="client:PinGenRequestBPELResponseMessage"/>
+		</wsdl:operation>
+	</wsdl:portType>
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	PARTNER LINK TYPE DEFINITION
+	the PinGenRequestBPEL partnerLinkType binds the provider and
+	requester portType into an asynchronous conversation.
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<plnk:partnerLinkType name="PinGenRequestBPEL">
+		<plnk:role name="PinGenRequestBPELProvider">
+			<plnk:portType name="client:PinGenRequestBPEL"/>
+		</plnk:role>
+		<plnk:role name="PinGenRequestBPELRequester">
+			<plnk:portType name="client:PinGenRequestBPELCallback"/>
+		</plnk:role>
+	</plnk:partnerLinkType>
+</wsdl:definitions>

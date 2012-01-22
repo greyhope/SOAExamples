@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns="http://www.example.org"
+            targetNamespace="http://www.example.org"
+            elementFormDefault="qualified">
+ <xsd:element name="leaveRequest" type="tLeaveRequest"/> <xsd:complexType name="tLeaveRequest">
+       <xsd:sequence>
+         <xsd:element name="employeeId" type="xsd:string"/>
+         <xsd:element name="fullName" type="xsd:string" />
+         <xsd:element name="startDate" type="xsd:date" />
+         <xsd:element name="endDate" type="xsd:date" />
+         <xsd:element name="leaveType" type="xsd:string" />
+         <xsd:element name="leaveReason" type="xsd:string"/>
+         <xsd:element name="requestStatus" type="xsd:string"/>
+       </xsd:sequence>
+     </xsd:complexType>
+</xsd:schema>

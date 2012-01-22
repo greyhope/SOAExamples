@@ -1,0 +1,176 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!--
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Oracle JDeveloper BPEL Designer 
+  
+  Created: Thu Jan 12 14:39:26 SAST 2012
+  Author:  greyhope
+  Type: BPEL 1.1 Process
+  Purpose: Synchronous BPEL Process
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-->
+<process name="LeaveBPEL"
+               targetNamespace="http://xmlns.oracle.com/HumanTaskFlowExample/HumanTaskFlowProject/LeaveBPEL"
+               xmlns="http://schemas.xmlsoap.org/ws/2003/03/business-process/"
+               xmlns:client="http://xmlns.oracle.com/HumanTaskFlowExample/HumanTaskFlowProject/LeaveBPEL"
+               xmlns:ora="http://schemas.oracle.com/xpath/extension"
+               xmlns:bpelx="http://schemas.oracle.com/bpel/extension"
+         xmlns:bpws="http://schemas.xmlsoap.org/ws/2003/03/business-process/"
+         xmlns:bpel2="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+         xmlns:ns1="http://www.example.org"
+         xmlns:task="http://xmlns.oracle.com/bpel/workflow/task"
+         xmlns:taskservice="http://xmlns.oracle.com/bpel/workflow/taskService"
+         xmlns:wfcommon="http://xmlns.oracle.com/bpel/workflow/common"
+         xmlns:wf="http://schemas.oracle.com/bpel/extensions/workflow">
+
+    <!-- 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        PARTNERLINKS                                                      
+        List of services participating in this BPEL process               
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    --> 
+  <partnerLinks>
+    <!-- 
+      The 'client' role represents the requester of this service. It is 
+      used for callback. The location and correlation information associated
+      with the client role are automatically set using WS-Addressing.
+    -->
+    <partnerLink name="leaveRequest" partnerLinkType="client:LeaveBPEL" myRole="LeaveBPELProvider"/>
+    <partnerLink name="LeaveRequest.TaskService_1"
+                 partnerLinkType="taskservice:TaskService"
+                 partnerRole="TaskService"
+                 myRole="TaskServiceCallbackListener"/>
+  </partnerLinks>
+
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      VARIABLES                                                        
+      List of messages and XML documents used within this BPEL process 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <variables>
+    <!-- Reference to the message passed as input during initiation -->
+    <variable name="inputVariable" messageType="client:LeaveBPELRequestMessage"/>
+
+    <!-- Reference to the message that will be returned to the requester-->
+    <variable name="outputVariable" messageType="client:LeaveBPELResponseMessage"/>
+    <variable name="LeaveRequest1_globalVariable"
+              messageType="taskservice:taskMessage"/>
+  </variables>
+
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     ORCHESTRATION LOGIC                                               
+     Set of activities coordinating the flow of messages across the    
+     services integrated within this business process                  
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <sequence name="main">
+
+    <!-- Receive input from requestor. (Note: This maps to operation defined in LeaveBPEL.wsdl) -->
+    <receive name="receiveInput" partnerLink="leaveRequest" portType="client:LeaveBPEL" operation="process" variable="inputVariable" createInstance="yes"/>
+
+    <!-- Generate reply to synchronous request -->
+    <scope name="LeaveRequest1"
+           xmlns:wf="http://schemas.oracle.com/bpel/extensions/workflow"
+           wf:key="LeaveRequest1_globalVariable">
+      <bpelx:annotation>
+        <bpelx:pattern patternName="bpelx:workflow"></bpelx:pattern>
+      </bpelx:annotation>
+      <variables>
+        <variable name="initiateTaskInput"
+                  messageType="taskservice:initiateTaskMessage"/>
+        <variable name="initiateTaskResponseMessage"
+                  messageType="taskservice:initiateTaskResponseMessage"/>
+      </variables>
+      <sequence>
+        <assign name="LeaveRequest1_AssignTaskAttributes">
+          <copy>
+            <from expression="number(3)"/>
+            <to variable="initiateTaskInput" part="payload"
+                query="/taskservice:initiateTask/task:task/task:priority"/>
+          </copy>
+          <copy>
+            <from><payload xmlns="http://xmlns.oracle.com/bpel/workflow/task">
+	<leaveRequest xmlns="http://www.example.org"/> 
+</payload></from>
+            <to variable="initiateTaskInput" part="payload"
+                query="/taskservice:initiateTask/task:task/task:payload"/>
+          </copy>
+          <copy>
+            <from variable="inputVariable" part="payload"
+                  query="/ns1:leaveRequest"/>
+            <to variable="initiateTaskInput" part="payload"
+                query="/taskservice:initiateTask/task:task/task:payload/ns1:leaveRequest"/>
+          </copy>
+          <copy>
+            <from expression="bpws:getVariableData('inputVariable','payload','/ns1:leaveRequest/ns1:fullName')"/>
+            <to variable="initiateTaskInput" part="payload"
+                query="/taskservice:initiateTask/task:task/task:title"/>
+          </copy>
+        </assign>
+        <invoke name="initiateTask_LeaveRequest1"
+                partnerLink="LeaveRequest.TaskService_1"
+                operation="initiateTask" portType="taskservice:TaskService"
+                inputVariable="initiateTaskInput"
+                outputVariable="initiateTaskResponseMessage"/>
+        <receive name="receiveCompletedTask_LeaveRequest1"
+                 partnerLink="LeaveRequest.TaskService_1"
+                 portType="taskservice:TaskServiceCallback"
+                 operation="onTaskCompleted"
+                 variable="LeaveRequest1_globalVariable" createInstance="no"/>
+      </sequence>
+    </scope>
+    <switch name="taskSwitch">
+      <case condition="$LeaveRequest1_globalVariable.payload/task:systemAttributes/task:outcome = 'REJECT'">
+        <bpelx:annotation>
+          <bpelx:pattern>Task outcome is REJECT</bpelx:pattern>
+          <bpelx:general>
+            <bpelx:property/>
+          </bpelx:general>
+        </bpelx:annotation>
+        <sequence>
+          <assign>
+            <copy>
+              <from variable="LeaveRequest1_globalVariable" part="payload"
+                    query="/task:task/task:payload/ns1:leaveRequest"/>
+              <to variable="inputVariable" part="payload"
+                  query="/ns1:leaveRequest"/>
+            </copy>
+          </assign>
+        </sequence>
+      </case>
+      <case condition="$LeaveRequest1_globalVariable.payload/task:systemAttributes/task:outcome = 'APPROVE'">
+        <bpelx:annotation>
+          <bpelx:pattern>Task outcome is APPROVE</bpelx:pattern>
+          <bpelx:general>
+            <bpelx:property/>
+          </bpelx:general>
+        </bpelx:annotation>
+        <sequence>
+          <assign>
+            <copy>
+              <from variable="LeaveRequest1_globalVariable" part="payload"
+                    query="/task:task/task:payload/ns1:leaveRequest"/>
+              <to variable="inputVariable" part="payload"
+                  query="/ns1:leaveRequest"/>
+            </copy>
+          </assign>
+        </sequence>
+      </case>
+      <otherwise>
+        <sequence>
+          <assign>
+            <copy>
+              <from variable="LeaveRequest1_globalVariable" part="payload"
+                    query="/task:task/task:payload/ns1:leaveRequest"/>
+              <to variable="inputVariable" part="payload"
+                  query="/ns1:leaveRequest"/>
+            </copy>
+          </assign>
+        </sequence>
+      </otherwise>
+    </switch>
+    <reply name="replyOutput" partnerLink="leaveRequest" portType="client:LeaveBPEL" operation="process" variable="outputVariable"/>
+  </sequence>
+</process>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<JavaBean xmlns="http://xmlns.oracle.com/adfm/beanmodel" version="11.1.1.60.13"
+          id="LeaveRequestPayloadType" Package="LeaveFormProject_LeaveRequest"
+          BeanClass="LeaveFormProject_LeaveRequest.LeaveRequestPayloadType"
+          isJavaBased="false">
+  <AccessorAttribute id="leaveRequest" IsCollection="true"
+                     BeanClass="LeaveFormProject_LeaveRequest.tLeaveRequest"
+                     CollectionBeanClass="LeaveFormProject_LeaveRequest.tLeaveRequest_leaveRequest_Operations">
+    <Properties>
+      <Property Name="minOccurs" Value="1"/>
+      <Property Name="maxOccurs" Value="1"/>
+      <Property Name="LABEL" Value="Leave Request"/>
+      <Property Name="nillable" Value="false"/>
+      <Property Name="originalName" Value="leaveRequest"/>
+      <Property Name="targetNamespace" Value="http://www.example.org"/>
+    </Properties>
+  </AccessorAttribute>
+</JavaBean>

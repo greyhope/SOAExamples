@@ -1,0 +1,11 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<hwTaskFlows xmlns="http://xmlns.oracle.com/bpel/workflow/hwTaskFlowProperties">
+   <ApplicationName>worklist</ApplicationName>
+   <LookupType>LOCAL</LookupType>
+   <TaskFlowDeploy>false</TaskFlowDeploy>
+   <TaskFlowServer>
+      <hostName/>
+      <httpPort/>
+      <httpsPort/>
+   </TaskFlowServer>
+<hwTaskFlow><WorkflowName>HumantaskApprovePinGenRequest</WorkflowName><TaskDefinitionNamespace>http://xmlns.oracle.com/PinGenerationSOA/PinGenerationProject/HumantaskApprovePinGenRequest</TaskDefinitionNamespace><TaskFlowId>HumantaskApprovePinGenRequest_TaskFlow</TaskFlowId><TaskFlowFileName>WEB-INF/HumantaskApprovePinGenRequest_TaskFlow.xml</TaskFlowFileName></hwTaskFlow></hwTaskFlows>

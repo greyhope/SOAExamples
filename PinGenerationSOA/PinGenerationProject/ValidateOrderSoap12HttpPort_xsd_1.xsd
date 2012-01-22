@@ -1,0 +1,17 @@
+<?xml version= '1.0' encoding= 'UTF-8' ?>
+<xs:schema xmlns:tns="http://pinvalidation.thegreyhope.co.za/" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+     version="1.0" targetNamespace="http://pinvalidation.thegreyhope.co.za/">
+    <xs:element name="validateOrderNumber" type="tns:validateOrderNumber"/>
+    <xs:element name="validateOrderNumberResponse" type="tns:validateOrderNumberResponse"/>
+    <xs:complexType name="validateOrderNumber">
+        <xs:sequence>
+            <xs:element name="arg0" type="xs:int"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="validateOrderNumberResponse">
+        <xs:sequence>
+            <xs:element name="return" type="xs:int"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+<!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is Oracle JAX-WS 2.1.5. -->

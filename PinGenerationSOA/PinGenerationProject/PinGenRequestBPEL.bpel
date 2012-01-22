@@ -1,0 +1,247 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!--
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Oracle JDeveloper BPEL Designer 
+  
+  Created: Fri Jan 13 08:11:28 SAST 2012
+  Author:  greyhope
+  Type: BPEL 1.1 Process
+  Purpose: Asynchronous BPEL Process
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-->
+<process name="PinGenRequestBPEL"
+         targetNamespace="http://xmlns.oracle.com/PinGenerationSOA/PinGenerationProject/PinGenRequestBPEL"
+         xmlns="http://schemas.xmlsoap.org/ws/2003/03/business-process/"
+         xmlns:client="http://xmlns.oracle.com/PinGenerationSOA/PinGenerationProject/PinGenRequestBPEL"
+         xmlns:ora="http://schemas.oracle.com/xpath/extension"
+         xmlns:bpelx="http://schemas.oracle.com/bpel/extension"
+         xmlns:bpws="http://schemas.xmlsoap.org/ws/2003/03/business-process/"
+         xmlns:ns1="http://pinvalidation.thegreyhope.co.za/"
+         xmlns:ns2="http://xmlns.oracle.com/pcbpel/adapter/file/PinGenerationSOA/PinGenerationProject/ExternalWriteOrderNumberStatusService"
+         xmlns:ns3="http://xmlns.oracle.com/bpel/workflow/taskService"
+         xmlns:ns4="http://www.example.org"
+         xmlns:bpel2="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+         xmlns:task="http://xmlns.oracle.com/bpel/workflow/task"
+         xmlns:wfcommon="http://xmlns.oracle.com/bpel/workflow/common"
+         xmlns:wf="http://schemas.oracle.com/bpel/extensions/workflow"
+         xmlns:xp20="http://www.oracle.com/XSL/Transform/java/oracle.tip.pc.services.functions.Xpath20"
+         xmlns:oraext="http://www.oracle.com/XSL/Transform/java/oracle.tip.pc.services.functions.ExtFunc"
+         xmlns:dvm="http://www.oracle.com/XSL/Transform/java/oracle.tip.dvm.LookupValue"
+         xmlns:ns5="http://xmlns.oracle.com/bpel/workflow/TaskEvidenceService"
+         xmlns:hwf="http://xmlns.oracle.com/bpel/workflow/xpath"
+         xmlns:ids="http://xmlns.oracle.com/bpel/services/IdentityService/xpath"
+         xmlns:bpm="http://xmlns.oracle.com/bpmn20/extensions"
+         xmlns:xdk="http://schemas.oracle.com/bpel/extension/xpath/function/xdk"
+         xmlns:xref="http://www.oracle.com/XSL/Transform/java/oracle.tip.xref.xpath.XRefXPathFunctions"
+         xmlns:ldap="http://schemas.oracle.com/xpath/extension/ldap">
+
+    <!-- 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        PARTNERLINKS                                                      
+        List of services participating in this BPEL process               
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    --> 
+    <partnerLinks>
+        <!-- 
+      The 'client' role represents the requester of this service. It is 
+      used for callback. The location and correlation information associated
+      with the client role are automatically set using WS-Addressing.
+    -->
+        <partnerLink name="pingenrequestbpel_client" partnerLinkType="client:PinGenRequestBPEL" myRole="PinGenRequestBPELProvider" partnerRole="PinGenRequestBPELRequester"/>
+        <partnerLink name="ExternalOrdernumberValidationService"
+                     partnerLinkType="ns1:ExternalOrdernumberValidationService"
+                     partnerRole="ValidateOrder"/>
+        <partnerLink name="HumantaskApprovePinGenRequest.TaskService"
+                     partnerLinkType="ns3:TaskService" partnerRole="TaskService"
+                     myRole="TaskServiceCallbackListener"/>
+        <partnerLink name="ExternalWriteOrderNumberStatusService"
+                     partnerLinkType="ns2:Write_plt" partnerRole="Write_role"/>
+    </partnerLinks>
+
+    <!-- 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        VARIABLES                                                        
+        List of messages and XML documents used within this BPEL process 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    -->
+    <variables>
+        <!-- Reference to the message passed as input during initiation -->
+        <variable name="inputVariable" messageType="client:PinGenRequestBPELRequestMessage"/>
+
+        <!-- Reference to the message that will be sent back to the requester during callback -->
+        <variable name="outputVariable" messageType="client:PinGenRequestBPELResponseMessage"/>
+        <variable name="InvokeOrderNumberValidator_validateOrderNumber_InputVariable"
+                  messageType="ns1:validateOrderNumber"/>
+        <variable name="InvokeOrderNumberValidator_validateOrderNumber_OutputVariable"
+                  messageType="ns1:validateOrderNumberResponse"/>
+        <variable name="HumantaskApprovePinGenRequest1_globalVariable"
+                  messageType="ns3:taskMessage"/>
+    </variables>
+
+    <!-- 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+       ORCHESTRATION LOGIC                                               
+       Set of activities coordinating the flow of messages across the    
+       services integrated within this business process                  
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    -->
+    <sequence name="main">
+        <!-- Receive input from requestor. (Note: This maps to operation defined in PinGenRequestBPEL.wsdl) -->
+        <receive name="receiveInput" partnerLink="pingenrequestbpel_client" portType="client:PinGenRequestBPEL" operation="process" variable="inputVariable" createInstance="yes"/>
+
+        <!-- 
+          Asynchronous callback to the requester. (Note: the callback location and correlation id is transparently handled using WS-addressing.)
+        -->
+        <assign name="AssignInvokeAndOuput">
+            <copy>
+                <from variable="inputVariable" part="payload"
+                      query="/ns4:pingenrequest/ns4:ordernumber"/>
+                <to variable="InvokeOrderNumberValidator_validateOrderNumber_InputVariable"
+                    part="parameters" query="/ns1:validateOrderNumber/arg0"/>
+            </copy>
+            <copy>
+                <from variable="inputVariable" part="payload"
+                      query="/ns4:pingenrequest"/>
+                <to variable="outputVariable" part="payload"
+                    query="/ns4:pingenrequest"/>
+            </copy>
+        </assign>
+        <invoke name="InvokeOrderNumberValidator" bpelx:invokeAsDetail="no"
+                inputVariable="InvokeOrderNumberValidator_validateOrderNumber_InputVariable"
+                outputVariable="InvokeOrderNumberValidator_validateOrderNumber_OutputVariable"
+                partnerLink="ExternalOrdernumberValidationService"
+                portType="ns1:ValidateOrder" operation="validateOrderNumber"/>
+        <switch name="Switch1">
+            <case condition="bpws:getVariableData('InvokeOrderNumberValidator_validateOrderNumber_OutputVariable','parameters','/ns1:validateOrderNumberResponse') = 2">
+                <bpelx:annotation>
+                    <bpelx:general>
+                        <bpelx:property name="userLabel">ValidatedOrderNumber</bpelx:property>
+                    </bpelx:general>
+                </bpelx:annotation>
+                <sequence>
+                    <scope name="HumantaskApprovePinGenRequest1"
+                           xmlns:wf="http://schemas.oracle.com/bpel/extensions/workflow"
+                           wf:key="HumantaskApprovePinGenRequest1_globalVariable">
+                        <bpelx:annotation>
+                            <bpelx:pattern patternName="bpelx:workflow"></bpelx:pattern>
+                        </bpelx:annotation>
+                        <variables>
+                            <variable name="initiateTaskInput"
+                                      messageType="ns3:initiateTaskMessage"/>
+                            <variable name="initiateTaskResponseMessage"
+                                      messageType="ns3:initiateTaskResponseMessage"/>
+                        </variables>
+                        <sequence>
+                            <assign name="HumantaskApprovePinGenRequest1_AssignTaskAttributes">
+                                <copy>
+                                    <from expression="number(3)"/>
+                                    <to variable="initiateTaskInput"
+                                        part="payload"
+                                        query="/ns3:initiateTask/task:task/task:priority"/>
+                                </copy>
+                                <copy>
+                                    <from><payload xmlns="http://xmlns.oracle.com/bpel/workflow/task">
+	<pingenrequest xmlns="http://www.example.org"/> 
+</payload></from>
+                                    <to variable="initiateTaskInput"
+                                        part="payload"
+                                        query="/ns3:initiateTask/task:task/task:payload"/>
+                                </copy>
+                                <copy>
+                                    <from variable="outputVariable"
+                                          part="payload"
+                                          query="/ns4:pingenrequest"/>
+                                    <to variable="initiateTaskInput"
+                                        part="payload"
+                                        query="/ns3:initiateTask/task:task/task:payload/ns4:pingenrequest"/>
+                                </copy>
+                                <copy>
+                                    <from expression="string('Approve Order')"/>
+                                    <to variable="initiateTaskInput"
+                                        part="payload"
+                                        query="/ns3:initiateTask/task:task/task:title"/>
+                                </copy>
+                            </assign>
+                            <invoke name="initiateTask_HumantaskApprovePinGenRequest1"
+                                    partnerLink="HumantaskApprovePinGenRequest.TaskService"
+                                    operation="initiateTask"
+                                    portType="ns3:TaskService"
+                                    inputVariable="initiateTaskInput"
+                                    outputVariable="initiateTaskResponseMessage"/>
+                            <receive name="receiveCompletedTask_HumantaskApprovePinGenRequest1"
+                                     partnerLink="HumantaskApprovePinGenRequest.TaskService"
+                                     portType="ns3:TaskServiceCallback"
+                                     operation="onTaskCompleted"
+                                     variable="HumantaskApprovePinGenRequest1_globalVariable"
+                                     createInstance="no"/>
+                        </sequence>
+                    </scope>
+                    <switch name="taskSwitch">
+                        <case condition="$HumantaskApprovePinGenRequest1_globalVariable.payload/task:systemAttributes/task:outcome = 'REJECT'">
+                            <bpelx:annotation>
+                                <bpelx:pattern>Task outcome is REJECT</bpelx:pattern>
+                                <bpelx:general>
+                                    <bpelx:property/>
+                                </bpelx:general>
+                            </bpelx:annotation>
+                            <sequence>
+                                <assign>
+                                    <copy>
+                                        <from variable="HumantaskApprovePinGenRequest1_globalVariable"
+                                              part="payload"
+                                              query="/task:task/task:payload/ns4:pingenrequest"/>
+                                        <to variable="outputVariable"
+                                            part="payload"
+                                            query="/ns4:pingenrequest"/>
+                                    </copy>
+                                </assign>
+                            </sequence>
+                        </case>
+                        <case condition="$HumantaskApprovePinGenRequest1_globalVariable.payload/task:systemAttributes/task:outcome = 'APPROVE'">
+                            <bpelx:annotation>
+                                <bpelx:pattern>Task outcome is APPROVE</bpelx:pattern>
+                                <bpelx:general>
+                                    <bpelx:property/>
+                                </bpelx:general>
+                            </bpelx:annotation>
+                            <sequence>
+                                <assign>
+                                    <copy>
+                                        <from variable="HumantaskApprovePinGenRequest1_globalVariable"
+                                              part="payload"
+                                              query="/task:task/task:payload/ns4:pingenrequest"/>
+                                        <to variable="outputVariable"
+                                            part="payload"
+                                            query="/ns4:pingenrequest"/>
+                                    </copy>
+                                    <copy>
+                                        <from expression="'APPROVED'"/>
+                                        <to variable="outputVariable"
+                                            part="payload"
+                                            query="/ns4:pingenrequest/ns4:approved"/>
+                                    </copy>
+                                </assign>
+                            </sequence>
+                        </case>
+                        <otherwise>
+                            <sequence>
+                                <assign>
+                                    <copy>
+                                        <from variable="HumantaskApprovePinGenRequest1_globalVariable"
+                                              part="payload"
+                                              query="/task:task/task:payload/ns4:pingenrequest"/>
+                                        <to variable="outputVariable"
+                                            part="payload"
+                                            query="/ns4:pingenrequest"/>
+                                    </copy>
+                                </assign>
+                            </sequence>
+                        </otherwise>
+                    </switch>
+                </sequence>
+            </case>
+            <otherwise/>
+        </switch>
+        <invoke name="callbackClient" partnerLink="pingenrequestbpel_client" portType="client:PinGenRequestBPELCallback" operation="processResponse" inputVariable="outputVariable"/>
+    </sequence>
+</process>
