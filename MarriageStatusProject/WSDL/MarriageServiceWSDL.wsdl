@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://www.example.org/MarriageServiceWSDL/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="MarriageServiceWSDL" targetNamespace="http://www.example.org/MarriageServiceWSDL/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://www.example.org/MarriageServiceWSDL/">
+      <xsd:element name="findMarriageStatus">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="in" type="xsd:integer"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="findMarriageStatusResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="out" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="findMarriageStatusRequest">
+    <wsdl:part element="tns:findMarriageStatus" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="findMarriageStatusResponse">
+    <wsdl:part element="tns:findMarriageStatusResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:portType name="MarriageServiceWSDL">
+    <wsdl:operation name="findMarriageStatus">
+      <wsdl:input message="tns:findMarriageStatusRequest"/>
+      <wsdl:output message="tns:findMarriageStatusResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="MarriageServiceWSDLSOAP" type="tns:MarriageServiceWSDL">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="findMarriageStatus">
+      <soap:operation soapAction="http://www.example.org/MarriageServiceWSDL/findMarriageStatus"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="MarriageServiceWSDL">
+    <wsdl:port binding="tns:MarriageServiceWSDLSOAP" name="MarriageServiceWSDLSOAP">
+      <soap:address location="http://www.example.org/"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
