@@ -10,4 +10,38 @@
            xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"
            xmlns:orawsp="http://schemas.oracle.com/ws/2006/01/policy"
            xmlns:ui="http://xmlns.oracle.com/soa/designer/">
+  <import namespace="http://oracle.com/sca/soapservice/GetMarriageStatusSOAApplication/MarriageStatusProject/getMarriageStatusService"
+          location="getMarriageStatusService.wsdl" importType="wsdl"/>
+  <import namespace="http://www.example.org/MarriageServiceWSDL/"
+          location="http://192.168.6.197:8011/MarriageStatusProject/Proxy/MarriagePS?wsdl"
+          importType="wsdl"/>
+  <service name="getMarriageStatusService"
+           ui:wsdlLocation="getMarriageStatusService.wsdl">
+    <interface.wsdl interface="http://oracle.com/sca/soapservice/GetMarriageStatusSOAApplication/MarriageStatusProject/getMarriageStatusService#wsdl.interface(execute_ptt)"/>
+    <binding.ws port="http://oracle.com/sca/soapservice/GetMarriageStatusSOAApplication/MarriageStatusProject/getMarriageStatusService#wsdl.endpoint(getMarriageStatusService/execute_pt)">
+      <property name="weblogic.wsee.wsat.transaction.flowOption"
+                type="xs:string" many="false">NEVER</property>
+    </binding.ws>
+  </service>
+  <component name="MarriageMediator">
+    <implementation.mediator src="MarriageMediator.mplan"/>
+  </component>
+  <reference name="OSBProxy"
+             ui:wsdlLocation="http://192.168.6.197:8011/MarriageStatusProject/Proxy/MarriagePS?wsdl">
+    <interface.wsdl interface="http://www.example.org/MarriageServiceWSDL/#wsdl.interface(MarriageServiceWSDL)"/>
+    <binding.ws port="http://www.example.org/MarriageServiceWSDL/#wsdl.endpoint(MarriageServiceWSDLSOAPQSService/MarriageServiceWSDLSOAPQSPort)"
+                location="http://192.168.6.197:8011/MarriageStatusProject/Proxy/MarriagePS?wsdl"
+                soapVersion="1.1">
+      <property name="weblogic.wsee.wsat.transaction.flowOption"
+                type="xs:string" many="false">WSDLDriven</property>
+    </binding.ws>
+  </reference>
+  <wire>
+    <source.uri>getMarriageStatusService</source.uri>
+    <target.uri>MarriageMediator/MarriageMediator</target.uri>
+  </wire>
+  <wire>
+    <source.uri>MarriageMediator/OSBProxy</source.uri>
+    <target.uri>OSBProxy</target.uri>
+  </wire>
 </composite>
