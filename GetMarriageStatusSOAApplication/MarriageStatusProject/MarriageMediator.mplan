@@ -6,6 +6,9 @@
              validateSchema="false">
     <switch>
       <case executionType="direct" name="OSBProxy.findMarriageStatus">
+        <action/>
+      </case>
+      <case executionType="direct" name="OSBProxy.findMarriageStatus_2">
         <action>
           <transform>
             <part name="$out.parameters"
